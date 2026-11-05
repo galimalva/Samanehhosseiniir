@@ -1,0 +1,105 @@
+---
+const { title = 'وب‌سایت من', active = '' } = Astro.props
+---
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Tahoma, sans-serif;
+            background: #f0f9f3;
+            color: #333;
+            min-height: 100vh;
+        }
+        header.site-header {
+            background: linear-gradient(135deg, #064e3b, #047857, #10b981);
+            color: white;
+            box-shadow: 0 2px 15px rgba(6, 78, 59, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+        .logo { font-size: 20px; font-weight: bold; text-decoration: none; color: white; }
+        .logo .fa { display: block; }
+        .logo .en { font-size: 11px; font-weight: normal; opacity: 0.85; letter-spacing: 1px; margin-top: 2px; direction: ltr; text-align: right; }
+        nav.main-nav ul { list-style: none; display: flex; gap: 5px; }
+        nav.main-nav a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            display: block;
+        }
+        nav.main-nav a:hover { background: rgba(255,255,255,0.15); color: white; }
+        nav.main-nav a.active { background: rgba(255,255,255,0.2); color: white; font-weight: bold; }
+        main { min-height: calc(100vh - 70px - 60px); }
+        footer.site-footer {
+            background: #064e3b;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+        }
+        .settings-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: #064e3b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 999;
+            transition: all 0.3s;
+        }
+        .settings-btn:hover { background: #10b981; transform: scale(1.1); }
+        @media (max-width: 700px) {
+            .header-container { flex-direction: column; height: auto; padding: 15px 20px; gap: 10px; }
+            nav.main-nav ul { flex-wrap: wrap; justify-content: center; }
+            nav.main-nav a { padding: 8px 12px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="fa">سمانه حسینی</span>
+                <span class="en">SAMANEH HOSSEINI</span>
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="/" class={active === 'home' ? 'active' : ''}>خانه</a></li>
+                    <li><a href="/stories" class={active === 'stories' ? 'active' : ''}>داستان‌ها</a></li>
+                    <li><a href="/writings" class={active === 'writings' ? 'active' : ''}>دلنوشته‌ها</a></li>
+                    <li><a href="/contact" class={active === 'contact' ? 'active' : ''}>ارتباط با من</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main><slot /></main>
+    <footer class="site-footer">© 2026 سمانه حسینی - تمامی حقوق محفوظ است</footer>
+    <a href="/admin/login" class="settings-btn" title="پنل مدیریت">⚙️</a>
+</body>
+</html>

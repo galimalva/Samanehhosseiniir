@@ -1,0 +1,84 @@
+---
+// داشبورد مدیریت
+---
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>داشبورد مدیریت</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Tahoma, sans-serif; background: #f5f6fa; }
+        header { 
+            background: linear-gradient(135deg, #2c3e50, #4a6278); 
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        header a { color: white; text-decoration: none; }
+        header .btn-logout { background: #e74c3c; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .menu a { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 14px; 
+            text-align: center; 
+            text-decoration: none; 
+            color: #333; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
+            transition: all 0.3s; 
+            border-top: 4px solid #667eea;
+        }
+        .menu a:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
+        .menu .icon { font-size: 36px; margin-bottom: 10px; }
+        .menu h3 { font-size: 16px; color: #2c3e50; }
+        .note { 
+            background: #fff3cd; 
+            padding: 20px; 
+            border-radius: 10px; 
+            color: #856404; 
+            margin-top: 25px; 
+            line-height: 1.8;
+        }
+        .note code { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📊 پنل مدیریت</h1>
+        <a href="/" style="margin-left:15px;">مشاهده سایت</a>
+        <a id="logout" class="btn-logout">خروج</a>
+    </header>
+    <div class="container">
+        <div class="menu">
+            <a href="/stories">
+                <div class="icon">📖</div>
+                <h3>مشاهده داستان‌ها</h3>
+            </a>
+            <a href="/writings">
+                <div class="icon">💭</div>
+                <h3>مشاهده دلنوشته‌ها</h3>
+            </a>
+            <a href="/contact">
+                <div class="icon">✉️</div>
+                <h3>مشاهده تماس</h3>
+            </a>
+        </div>
+        <div class="note">
+            <strong>📌 نکته:</strong> برای افزودن محتوا، فایل‌های JSON در پوشه‌ی <code>public/data/</code> را ویرایش کنید و عکس‌ها را در پوشه‌ی <code>public/images/</code> بگذارید.
+        </div>
+    </div>
+    <script>
+        if (localStorage.getItem('isAdmin') !== 'true') {
+            window.location.href = '/admin/login'
+        }
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('isAdmin')
+            window.location.href = '/admin/login'
+        })
+    </script>
+</body>
+</html>

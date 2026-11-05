@@ -1,0 +1,65 @@
+---
+// صفحه داستان‌ها
+import Layout from '../layouts/Layout.astro'
+---
+<Layout title="داستان‌ها - سمانه حسینی" active="stories">
+    <style>
+        .page-title { 
+            text-align: center; 
+            padding: 40px 20px 20px; 
+            background: linear-gradient(135deg, #f5f6fa, #e8ecf3);
+        }
+        .page-title h1 { font-size: 32px; color: #2c3e50; margin-bottom: 8px; }
+        .page-title p { color: #666; }
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .story { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 14px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
+            border-right: 4px solid #667eea;
+        }
+        .story img { 
+            width: 100%; 
+            max-height: 400px; 
+            object-fit: cover; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+        }
+        .story h2 { color: #2c3e50; margin-bottom: 15px; font-size: 24px; }
+        .story p { line-height: 2; white-space: pre-wrap; font-size: 16px; }
+        .loading { text-align: center; padding: 40px; color: #999; }
+    </style>
+    
+    <div class="page-title">
+        <h1>📖 داستان‌ها</h1>
+        <p>مجموعه‌ای از روایت‌ها و داستان‌ها</p>
+    </div>
+    
+    <div class="container">
+        <div id="storiesList" class="loading">در حال بارگذاری...</div>
+    </div>
+    
+    <script>
+        fetch('/data/stories.json')
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('storiesList')
+                if (data.length === 0) {
+                    list.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">هنوز داستانی اضافه نشده است.</p>'
+                    return
+                }
+                list.innerHTML = data.map(s => `
+                    <div class="story">
+                        ${s.image ? `<img src="${s.image}" alt="${s.title}">` : ''}
+                        <h2>${s.title}</h2>
+                        <p>${s.content}</p>
+                    </div>
+                `).join('')
+            })
+            .catch(() => {
+                document.getElementById('storiesList').innerHTML = '<p style="text-align:center;color:#999;padding:40px;">خطا در بارگذاری</p>'
+            })
+    </script>
+</Layout>
