@@ -1,0 +1,337 @@
+
+---
+import Layout from '../../layouts/Layout.astro';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+---
+
+<Layout title="دلنوشته - سمانه حسینی" active="writings">
+
+  <style>
+    .writing-wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 35px 20px 70px;
+      direction: rtl;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #764ba2;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 25px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: #f5effa;
+    }
+
+    .back-link:hover {
+      background: #764ba2;
+      color: white;
+    }
+
+    .writing-header {
+      text-align: center;
+      padding: 35px 25px;
+      background: linear-gradient(135deg, #faf5ff, #f0e4fa);
+      border-radius: 15px;
+      margin-bottom: 30px;
+    }
+
+    .writing-header h1 {
+      font-size: 32px;
+      color: #59317d;
+      line-height: 1.7;
+      margin: 0 0 15px;
+    }
+
+    .writing-meta {
+      color: #666;
+      font-size: 14px;
+      line-height: 2;
+    }
+
+    .writing-meta span {
+      margin: 0 6px;
+    }
+
+    .writing-image {
+      width: 100%;
+      max-height: 450px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 30px;
+    }
+
+    .writing-excerpt {
+      font-size: 17px;
+      color: #666;
+      line-height: 2.1;
+      padding: 20px;
+      border-right: 4px solid #a78bfa;
+      background: #faf7ff;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      white-space: pre-line;
+    }
+
+    .writing-content {
+      font-size: 17px;
+      line-height: 2.5;
+      color: #292929;
+      overflow-wrap: anywhere;
+    }
+
+    .writing-content p {
+      margin: 0 0 24px;
+      white-space: pre-line;
+      text-align: justify;
+    }
+
+    .writing-end {
+      text-align: center;
+      color: #a78bfa;
+      margin-top: 45px;
+      font-size: 18px;
+      letter-spacing: 6px;
+    }
+
+    .loading,
+    .message {
+      text-align: center;
+      padding: 70px 20px;
+      color: #666;
+      line-height: 2;
+    }
+
+    .message h2 {
+      color: #59317d;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .writing-wrap {
+        padding: 20px 15px 45px;
+      }
+
+      .writing-header {
+        padding: 25px 15px;
+      }
+
+      .writing-header h1 {
+        font-size: 25px;
+      }
+
+      .writing-content {
+        font-size: 16px;
+        line-height: 2.2;
+      }
+    }
+  </style>
+
+  <main class="writing-wrap">
+
+    <a href="/writings" class="back-link">
+      → بازگشت به فهرست دلنوشته‌ها
+    </a>
+
+    <div
+      id="writingContainer"
+      class="loading"
+      aria-live="polite"
+    >
+      در حال دریافت دلنوشته...
+    </div>
+
+  </main>
+
+  <script>
+    import { supabase } from '../../lib/supabase.js';
+
+    const container =
+      document.getElementById('writingContainer');
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatContent(text) {
+      return String(text ?? '')
+        .replace(/\r\n/g, '\n')
+        .split(/\n\s*\n/)
+        .filter(paragraph => paragraph.trim())
+        .map(paragraph => {
+          return `<p>${escapeHtml(paragraph.trim())}</p>`;
+        })
+        .join('');
+    }
+
+    function showMessage(title, message) {
+      if (!container) return;
+
+      container.className = 'message';
+
+      container.innerHTML = `
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(message)}</p>
+      `;
+    }
+
+    async function loadWriting() {
+      if (!container) return;
+
+      // گرفتن شناسه از آدرس
+      const pathParts = window.location.pathname
+        .split('/')
+        .filter(Boolean);
+
+      let slug = '';
+
+      try {
+        slug = decodeURIComponent(pathParts[1] || '');
+      } catch {
+        showMessage(
+          'آدرس نامعتبر',
+          'شناسهٔ دلنوشته درست نیست.'
+        );
+        return;
+      }
+
+      if (!slug) {
+        showMessage(
+          'شناسه یافت نشد',
+          'آدرس دلنوشته ناقص است.'
+        );
+        return;
+      }
+
+      try {
+        // دریافت دلنوشته از Supabase
+        const { data, error } = await supabase
+          .from('writings')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          showMessage(
+            'دلنوشته یافت نشد',
+            'این دلنوشته وجود ندارد یا در دسترس نیست.'
+          );
+          return;
+        }
+
+        // عنوان صفحه
+        document.title =
+          `${data.title || 'دلنوشته'} - سمانه حسینی`;
+
+        // تاریخ
+        let dateText = '';
+
+        if (data.created_at) {
+          const date = new Date(data.created_at);
+
+          if (!Number.isNaN(date.getTime())) {
+            dateText = date.toLocaleDateString('fa-IR');
+          }
+        }
+
+        // تصویر
+        const imageHtml = data.image_url
+          ? `
+            <img
+              class="writing-image"
+              src="${escapeHtml(data.image_url)}"
+              alt="${escapeHtml(data.title || 'تصویر دلنوشته')}"
+              loading="lazy"
+            />
+          `
+          : '';
+
+        // خلاصه
+        const excerptHtml = data.excerpt
+          ? `
+            <div class="writing-excerpt">
+              ${escapeHtml(data.excerpt)}
+            </div>
+          `
+          : '';
+
+        // رده سنی
+        const ageHtml = data.age_rating
+          ? `
+            <span>
+              رده سنی: ${escapeHtml(data.age_rating)}
+            </span>
+          `
+          : '';
+
+        // متن کامل
+        const contentHtml =
+          formatContent(data.content);
+
+        container.className = '';
+
+        container.innerHTML = `
+          <header class="writing-header">
+
+            <h1>
+              ${escapeHtml(data.title || 'بدون عنوان')}
+            </h1>
+
+            <div class="writing-meta">
+
+              <span>
+                به قلم:
+                ${escapeHtml(data.author || 'سمانه حسینی')}
+              </span>
+
+              ${dateText
+                ? `<span> | ${escapeHtml(dateText)}</span>`
+                : ''}
+
+              ${ageHtml
+                ? `<span> | ${ageHtml}</span>`
+                : ''}
+
+            </div>
+
+          </header>
+
+          ${imageHtml}
+
+          ${excerptHtml}
+
+          <article class="writing-content">
+            ${contentHtml}
+          </article>
+
+          <div class="writing-end">
+            ● ● ●
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('Writing load error:', error);
+
+        showMessage(
+          'خطا در دریافت دلنوشته',
+          error.message || 'لطفاً دوباره تلاش کنید.'
+        );
+      }
+    }
+
+    loadWriting();
+  </script>
+
+</Layout>

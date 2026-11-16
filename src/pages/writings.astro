@@ -1,65 +1,397 @@
+
 ---
-// صفحه دلنوشته‌ها
-import Layout from '../layouts/Layout.astro'
+import Layout from '../layouts/Layout.astro';
 ---
+
 <Layout title="دلنوشته‌ها - سمانه حسینی" active="writings">
-    <style>
-        .page-title { 
-            text-align: center; 
-            padding: 40px 20px 20px; 
-            background: linear-gradient(135deg, #f5f6fa, #e8ecf3);
-        }
-        .page-title h1 { font-size: 32px; color: #2c3e50; margin-bottom: 8px; }
-        .page-title p { color: #666; }
-        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-        .writing { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 14px; 
-            margin-bottom: 25px; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
-            border-right: 4px solid #764ba2;
-        }
-        .writing img { 
-            width: 100%; 
-            max-height: 400px; 
-            object-fit: cover; 
-            border-radius: 10px; 
-            margin-bottom: 20px; 
-        }
-        .writing h2 { color: #2c3e50; margin-bottom: 15px; font-size: 24px; }
-        .writing p { line-height: 2; white-space: pre-wrap; font-size: 16px; font-style: italic; }
-        .loading { text-align: center; padding: 40px; color: #999; }
-    </style>
-    
-    <div class="page-title">
-        <h1>💭 دلنوشته‌ها</h1>
-        <p>نگاشته‌هایی از دل</p>
+  <style>
+    .writings-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 35px 20px 70px;
+      direction: rtl;
+    }
+
+    .writings-header {
+      text-align: center;
+      padding: 45px 20px;
+      margin-bottom: 35px;
+      background: linear-gradient(135deg, #443758, #764ba2);
+      border-radius: 16px;
+      color: white;
+    }
+
+    .writings-header h1 {
+      font-size: 34px;
+      color: white;
+      margin: 0 0 12px;
+    }
+
+    .writings-header p {
+      font-size: 15px;
+      line-height: 2;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    .writings-count {
+      margin-bottom: 25px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .writings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 25px;
+    }
+
+    .writing-card {
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border: 1px solid #eee8f5;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .writing-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(118, 75, 162, 0.15);
+    }
+
+    .writing-image {
+      display: block;
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .writing-placeholder {
+      height: 200px;
+      background: linear-gradient(135deg, #f3f0fa, #e3d5f5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #764ba2;
+      font-size: 55px;
+    }
+
+    .writing-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .writing-title {
+      color: #443758;
+      font-size: 21px;
+      line-height: 1.8;
+      margin: 0 0 12px;
+    }
+
+    .writing-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 15px;
+    }
+
+    .writing-excerpt {
+      color: #555;
+      font-size: 15px;
+      font-style: italic;
+      line-height: 2.1;
+      margin: 0 0 20px;
+      flex: 1;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+
+    .writing-link {
+      display: inline-block;
+      text-align: center;
+      background: #764ba2;
+      color: white;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    .writing-link:hover {
+      background: #5b4476;
+    }
+
+    .loading,
+    .empty,
+    .error-message {
+      background: white;
+      border-radius: 14px;
+      text-align: center;
+      padding: 70px 20px;
+      color: #777;
+      font-size: 15px;
+      line-height: 2;
+    }
+
+    .error-message {
+      color: #991b1b;
+    }
+
+    .retry-button {
+      display: inline-block;
+      background: #764ba2;
+      color: white;
+      padding: 11px 22px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 15px;
+    }
+
+    .retry-button:hover {
+      background: #5b4476;
+    }
+
+    @media (max-width: 600px) {
+      .writings-wrap {
+        padding: 20px 15px 40px;
+      }
+
+      .writings-header {
+        padding: 30px 15px;
+      }
+
+      .writings-header h1 {
+        font-size: 27px;
+      }
+
+      .writings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <main class="writings-wrap">
+    <header class="writings-header">
+      <h1>دلنوشته‌ها</h1>
+      <p>
+        مجموعه‌ای از دلنوشته‌ها و نوشته‌های سمانه حسینی
+      </p>
+    </header>
+
+    <div
+      id="writingsCount"
+      class="writings-count"
+    ></div>
+
+    <div id="writingsContainer">
+      <div class="loading">
+        در حال بارگذاری دلنوشته‌ها...
+      </div>
     </div>
-    
-    <div class="container">
-        <div id="writingsList" class="loading">در حال بارگذاری...</div>
-    </div>
-    
-    <script>
-        fetch('/data/writings.json')
-            .then(r => r.json())
-            .then(data => {
-                const list = document.getElementById('writingsList')
-                if (data.length === 0) {
-                    list.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">هنوز دلنوشته‌ای اضافه نشده است.</p>'
-                    return
-                }
-                list.innerHTML = data.map(w => `
-                    <div class="writing">
-                        ${w.image ? `<img src="${w.image}" alt="${w.title}">` : ''}
-                        <h2>${w.title}</h2>
-                        <p>${w.content}</p>
-                    </div>
-                `).join('')
-            })
-            .catch(() => {
-                document.getElementById('writingsList').innerHTML = '<p style="text-align:center;color:#999;padding:40px;">خطا در بارگذاری</p>'
-            })
-    </script>
+  </main>
+
+  <script>
+    import { supabase } from '../lib/supabase.js';
+
+    const container = document.getElementById('writingsContainer');
+    const countElement = document.getElementById('writingsCount');
+
+    function escapeHtml(value) {
+      if (value == null) return '';
+
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatDate(value) {
+      if (!value) return '';
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+
+      return date.toLocaleDateString('fa-IR');
+    }
+
+    function getExcerpt(writing) {
+      const text = String(
+        writing.excerpt || writing.content || ''
+      ).trim();
+
+      if (text.length > 180) {
+        return text.substring(0, 180) + '...';
+      }
+
+      return text;
+    }
+
+    function createWritingCard(writing) {
+      const title = escapeHtml(
+        writing.title || 'بدون عنوان'
+      );
+
+      const author = escapeHtml(
+        writing.author || 'سمانه حسینی'
+      );
+
+      const excerpt = escapeHtml(
+        getExcerpt(writing)
+      );
+
+      const date = formatDate(
+        writing.created_at
+      );
+
+      const imageHtml = writing.image_url
+        ? `
+          <img
+            class="writing-image"
+            src="${escapeHtml(writing.image_url)}"
+            alt="${title}"
+            loading="lazy"
+          />
+        `
+        : `
+          <div class="writing-placeholder">
+            ✒
+          </div>
+        `;
+
+      const dateHtml = date
+        ? `<span>📅 ${escapeHtml(date)}</span>`
+        : '';
+
+      const slug = String(writing.slug || '');
+
+      const linkHtml = slug
+        ? `
+          <a
+            href="/writings/${encodeURIComponent(slug)}"
+            class="writing-link"
+          >
+            خواندن دلنوشته
+          </a>
+        `
+        : '';
+
+      return `
+        <article class="writing-card">
+          ${imageHtml}
+
+          <div class="writing-body">
+            <h2 class="writing-title">
+              ${title}
+            </h2>
+
+            <div class="writing-meta">
+              <span>✍️ ${author}</span>
+              ${dateHtml}
+            </div>
+
+            <p class="writing-excerpt">
+              ${excerpt}
+            </p>
+
+            ${linkHtml}
+          </div>
+        </article>
+      `;
+    }
+
+    async function loadWritings() {
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="loading">
+          در حال بارگذاری دلنوشته‌ها...
+        </div>
+      `;
+
+      try {
+        const { data, error } = await supabase
+          .from('writings')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        const writings = data || [];
+
+        if (countElement) {
+          countElement.textContent =
+            `تعداد دلنوشته‌ها: ${writings.length}`;
+        }
+
+        if (writings.length === 0) {
+          container.innerHTML = `
+            <div class="empty">
+              <div style="font-size:45px">✒</div>
+              <h3>هنوز دلنوشته‌ای منتشر نشده است.</h3>
+              <p>
+                دلنوشته‌های جدید به‌زودی اضافه خواهند شد.
+              </p>
+            </div>
+          `;
+
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="writings-grid">
+            ${writings.map(createWritingCard).join('')}
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('Error loading writings:', error);
+
+        if (countElement) {
+          countElement.textContent = '';
+        }
+
+        container.innerHTML = `
+          <div class="error-message">
+            <h3>خطا در بارگذاری دلنوشته‌ها</h3>
+
+            <p>
+              دریافت اطلاعات از پایگاه داده انجام نشد.
+              لطفاً دوباره تلاش کنید.
+            </p>
+
+            <button
+              id="retryWritings"
+              class="retry-button"
+              type="button"
+            >
+              تلاش دوباره
+            </button>
+          </div>
+        `;
+
+        document
+          .getElementById('retryWritings')
+          ?.addEventListener('click', loadWritings);
+      }
+    }
+
+    loadWritings();
+  </script>
 </Layout>

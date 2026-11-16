@@ -1,84 +1,413 @@
+
 ---
-// داشبورد مدیریت
+import Layout from '../../layouts/Layout.astro';
 ---
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>داشبورد مدیریت</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Tahoma, sans-serif; background: #f5f6fa; }
-        header { 
-            background: linear-gradient(135deg, #2c3e50, #4a6278); 
-            color: white; 
-            padding: 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        header a { color: white; text-decoration: none; }
-        header .btn-logout { background: #e74c3c; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-        .menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .menu a { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 14px; 
-            text-align: center; 
-            text-decoration: none; 
-            color: #333; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
-            transition: all 0.3s; 
-            border-top: 4px solid #667eea;
-        }
-        .menu a:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
-        .menu .icon { font-size: 36px; margin-bottom: 10px; }
-        .menu h3 { font-size: 16px; color: #2c3e50; }
-        .note { 
-            background: #fff3cd; 
-            padding: 20px; 
-            border-radius: 10px; 
-            color: #856404; 
-            margin-top: 25px; 
-            line-height: 1.8;
-        }
-        .note code { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>📊 پنل مدیریت</h1>
-        <a href="/" style="margin-left:15px;">مشاهده سایت</a>
-        <a id="logout" class="btn-logout">خروج</a>
-    </header>
-    <div class="container">
-        <div class="menu">
-            <a href="/stories">
-                <div class="icon">📖</div>
-                <h3>مشاهده داستان‌ها</h3>
-            </a>
-            <a href="/writings">
-                <div class="icon">💭</div>
-                <h3>مشاهده دلنوشته‌ها</h3>
-            </a>
-            <a href="/contact">
-                <div class="icon">✉️</div>
-                <h3>مشاهده تماس</h3>
-            </a>
-        </div>
-        <div class="note">
-            <strong>📌 نکته:</strong> برای افزودن محتوا، فایل‌های JSON در پوشه‌ی <code>public/data/</code> را ویرایش کنید و عکس‌ها را در پوشه‌ی <code>public/images/</code> بگذارید.
-        </div>
+
+<Layout title="داشبورد مدیریت" active="">
+  <style>
+    .admin-dashboard {
+      min-height: 75vh;
+      background: #f8faf9;
+      direction: rtl;
+    }
+
+    .dash-header {
+      background: linear-gradient(135deg, #064e3b, #047857, #10b981);
+      color: white;
+      padding: 25px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .dash-header h1 {
+      font-size: 24px;
+      margin: 0;
+      color: white;
+    }
+
+    .dash-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .dash-actions a,
+    .dash-actions button {
+      color: white;
+      text-decoration: none;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.15);
+      transition: background 0.3s;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .dash-actions a:hover,
+    .dash-actions button:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    .dash-actions .btn-red {
+      background: #dc3545;
+    }
+
+    .dash-actions .btn-red:hover {
+      background: #b02a37;
+    }
+
+    .dash-actions button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .dash-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px 50px;
+    }
+
+    .welcome {
+      background: white;
+      padding: 28px;
+      border-radius: 14px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.06);
+      border-right: 4px solid #10b981;
+    }
+
+    .welcome h2 {
+      color: #064e3b;
+      font-size: 20px;
+      margin: 0 0 12px;
+    }
+
+    .welcome p {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.9;
+      margin: 0;
+    }
+
+    .section-title {
+      font-size: 20px;
+      color: #064e3b;
+      margin: 0 0 20px;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 22px;
+    }
+
+    .menu-card {
+      display: block;
+      background: white;
+      padding: 38px 25px;
+      border-radius: 14px;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+      border-top: 5px solid #10b981;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(16,185,129,0.15);
+    }
+
+    .menu-card:focus-visible {
+      outline: 3px solid #10b981;
+      outline-offset: 3px;
+    }
+
+    .menu-card.purple {
+      border-top-color: #764ba2;
+    }
+
+    .menu-card.purple:hover {
+      box-shadow: 0 10px 25px rgba(118,75,162,0.15);
+    }
+
+    .menu-card .card-icon {
+      font-size: 45px;
+      margin-bottom: 15px;
+    }
+
+    .menu-card h3 {
+      font-size: 19px;
+      color: #064e3b;
+      margin: 0 0 10px;
+    }
+
+    .menu-card.purple h3 {
+      color: #764ba2;
+    }
+
+    .menu-card p {
+      font-size: 14px;
+      color: #777;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .card-link {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .menu-card.purple .card-link {
+      background: #f3e8ff;
+      color: #764ba2;
+    }
+
+    .loading-check {
+      text-align: center;
+      padding: 80px 20px;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .error-message {
+      color: #c0392b;
+    }
+
+    .retry-btn {
+      margin-top: 16px;
+      padding: 10px 20px;
+      border: 0;
+      border-radius: 8px;
+      background: #047857;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    @media (max-width: 650px) {
+      .dash-header {
+        padding: 20px;
+      }
+
+      .dash-header h1 {
+        font-size: 21px;
+      }
+
+      .dash-container {
+        margin: 25px auto;
+        padding: 0 15px 35px;
+      }
+
+      .menu {
+        grid-template-columns: 1fr;
+      }
+
+      .welcome {
+        padding: 22px;
+      }
+
+      .menu-card {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+
+  <main class="admin-dashboard">
+
+    <!-- بررسی ورود -->
+    <div
+      id="loadingCheck"
+      class="loading-check"
+      role="status"
+      aria-live="polite"
+    >
+      در حال بررسی ورود به پنل مدیریت...
     </div>
-    <script>
-        if (localStorage.getItem('isAdmin') !== 'true') {
-            window.location.href = '/admin/login'
+
+    <!-- محتوای داشبورد -->
+    <div id="dashContent" style="display:none;">
+
+      <header class="dash-header">
+        <h1>⚙️ پنل مدیریت سایت</h1>
+
+        <div class="dash-actions">
+          <a href="/">مشاهده سایت</a>
+
+          <button
+            id="logoutBtn"
+            class="btn-red"
+            type="button"
+          >
+            خروج از حساب
+          </button>
+        </div>
+      </header>
+
+      <div class="dash-container">
+
+        <section class="welcome">
+          <h2>👋 خوش آمدید</h2>
+
+          <p>
+            به پنل مدیریت سایت خوش آمدید.
+            از این بخش می‌توانید داستان‌ها و
+            دلنوشته‌های خود را اضافه، ویرایش
+            یا حذف کنید.
+          </p>
+        </section>
+
+        <h2 class="section-title">
+          بخش‌های مدیریت
+        </h2>
+
+        <nav class="menu" aria-label="بخش‌های مدیریت">
+
+          <!-- مدیریت داستان‌ها -->
+          <a
+            href="/admin/stories"
+            class="menu-card"
+          >
+            <div class="card-icon">📖</div>
+
+            <h3>مدیریت داستان‌ها</h3>
+
+            <p>
+              افزودن داستان جدید، ویرایش،
+              حذف، تنظیم تصویر، خلاصه،
+              شناسه و متن کامل داستان‌ها
+            </p>
+
+            <span class="card-link">
+              ورود به مدیریت داستان‌ها
+            </span>
+          </a>
+
+          <!-- مدیریت دلنوشته‌ها -->
+          <a
+            href="/admin/writings"
+            class="menu-card purple"
+          >
+            <div class="card-icon">✒️</div>
+
+            <h3>مدیریت دلنوشته‌ها</h3>
+
+            <p>
+              نشر دلنوشته جدید، ویرایش،
+              حذف، تنظیم تصویر، خلاصه،
+              شناسه و متن کامل دلنوشته‌ها
+            </p>
+
+            <span class="card-link">
+              ورود به مدیریت دلنوشته‌ها
+            </span>
+          </a>
+
+        </nav>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    import { supabase } from '../../lib/supabase.js';
+
+    const loadingCheck =
+      document.getElementById('loadingCheck');
+
+    const dashContent =
+      document.getElementById('dashContent');
+
+    const logoutBtn =
+      document.getElementById('logoutBtn');
+
+    // بررسی ورود به حساب
+    async function checkSession() {
+      if (!loadingCheck || !dashContent) {
+        return;
+      }
+
+      loadingCheck.style.display = 'block';
+      loadingCheck.classList.remove('error-message');
+      loadingCheck.textContent =
+        'در حال بررسی ورود به پنل مدیریت...';
+
+      dashContent.style.display = 'none';
+
+      try {
+        const { data, error } =
+          await supabase.auth.getUser();
+
+        if (error || !data.user) {
+          window.location.replace('/admin/login');
+          return;
         }
-        document.getElementById('logout').addEventListener('click', function() {
-            localStorage.removeItem('isAdmin')
-            window.location.href = '/admin/login'
-        })
-    </script>
-</body>
-</html>
+
+        loadingCheck.style.display = 'none';
+        dashContent.style.display = 'block';
+
+      } catch (error) {
+        console.error('Session error:', error);
+
+        loadingCheck.classList.add('error-message');
+        loadingCheck.textContent =
+          'خطا در بررسی ورود. اتصال اینترنت را بررسی کنید.';
+
+        const retryBtn = document.createElement('button');
+        retryBtn.type = 'button';
+        retryBtn.className = 'retry-btn';
+        retryBtn.textContent = 'تلاش دوباره';
+        retryBtn.addEventListener('click', checkSession);
+
+        loadingCheck.appendChild(
+          document.createElement('div')
+        );
+        loadingCheck.appendChild(retryBtn);
+      }
+    }
+
+    // خروج از حساب
+    async function logout() {
+      if (!logoutBtn) return;
+
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = 'در حال خروج...';
+
+      try {
+        const { error } =
+          await supabase.auth.signOut();
+
+        if (error) throw error;
+
+        window.location.replace('/admin/login');
+
+      } catch (error) {
+        console.error('Logout error:', error);
+
+        alert(
+          'خروج از حساب انجام نشد. دوباره تلاش کنید.'
+        );
+
+        logoutBtn.disabled = false;
+        logoutBtn.textContent = 'خروج از حساب';
+      }
+    }
+
+    logoutBtn?.addEventListener('click', logout);
+
+    // اجرای بررسی ورود
+    checkSession();
+  </script>
+</Layout>

@@ -1,0 +1,371 @@
+
+---
+import Layout from '../../layouts/Layout.astro';
+
+export const prerender = false;
+
+const slug = Astro.params.slug;
+---
+
+<Layout title="داستان - سمانه حسینی" active="stories">
+  <style>
+    .story-wrap {
+      max-width: 750px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #10b981;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 25px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s;
+    }
+
+    .back-link:hover {
+      background: #10b981;
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .story-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #f0f9f3, #d4ecde);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .story-header::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(
+        circle,
+        rgba(16, 185, 129, 0.18),
+        transparent
+      );
+      border-radius: 50%;
+    }
+
+    .story-header::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      left: -30px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(
+        circle,
+        rgba(5, 150, 105, 0.15),
+        transparent
+      );
+      border-radius: 50%;
+    }
+
+    .story-header h1 {
+      font-size: 38px;
+      color: #064e3b;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .story-image {
+      width: 100%;
+      max-height: 450px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .story-meta {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .story-meta .meta-item {
+      color: #555;
+    }
+
+    .story-meta .meta-divider {
+      color: #ccc;
+    }
+
+    .badge {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .story-content {
+      line-height: 2.2;
+      color: #2c2c2c;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .story-content p {
+      margin-bottom: 18px;
+      text-align: justify;
+      white-space: pre-line;
+    }
+
+    .story-content p.dialogue {
+      color: #10b981;
+      font-weight: 500;
+      padding-right: 15px;
+      border-right: 3px solid #d4ecde;
+      margin-right: 0;
+    }
+
+    .story-end {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #10b981;
+      font-size: 14px;
+      letter-spacing: 4px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 80px 20px;
+      color: #999;
+    }
+
+    .not-found {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .not-found h2 {
+      color: #064e3b;
+      margin-bottom: 10px;
+    }
+
+    .not-found p {
+      color: #999;
+      margin-bottom: 25px;
+    }
+
+    @media (max-width: 600px) {
+      .story-header h1 {
+        font-size: 28px;
+      }
+
+      .story-content {
+        font-size: 15px;
+        line-height: 2;
+      }
+
+      .story-wrap {
+        padding: 20px 15px 40px;
+      }
+    }
+  </style>
+
+  <div class="story-wrap" dir="rtl">
+    <a href="/stories" class="back-link">
+      → بازگشت به فهرست داستان‌ها
+    </a>
+
+    <div id="storyContent" class="loading">
+      در حال بارگذاری داستان...
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase.js';
+
+    const pathParts = window.location.pathname
+      .split('/')
+      .filter(Boolean);
+
+    const slug = decodeURIComponent(
+      pathParts[pathParts.length - 1] || ''
+    );
+
+    function escapeHtml(value) {
+      if (value == null) return '';
+
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatStoryContent(text) {
+      return String(text || '')
+        .split(/\n\s*\n/)
+        .map(paragraph => {
+          const trimmed = paragraph.trim();
+
+          if (!trimmed) return '';
+
+          if (trimmed.startsWith('_')) {
+            const dialogue = trimmed.substring(1).trim();
+
+            return `
+              <p class="dialogue">
+                ${escapeHtml(dialogue)}
+              </p>
+            `;
+          }
+
+          return `<p>${escapeHtml(trimmed)}</p>`;
+        })
+        .join('');
+    }
+
+    function showNotFound(message) {
+      const container = document.getElementById('storyContent');
+
+      if (!container) return;
+
+      document.title = 'داستان یافت نشد - سمانه حسینی';
+
+      container.className = '';
+
+      container.innerHTML = `
+        <div class="not-found">
+          <h2>داستان یافت نشد</h2>
+          <p>${escapeHtml(message)}</p>
+          <a href="/stories" class="back-link">
+            → بازگشت به فهرست داستان‌ها
+          </a>
+        </div>
+      `;
+    }
+
+    async function loadStory() {
+      const container = document.getElementById('storyContent');
+
+      if (!container) return;
+
+      if (!slug) {
+        showNotFound('شناسهٔ داستان مشخص نیست.');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('stories')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data) {
+          showNotFound('این داستان وجود ندارد یا حذف شده است.');
+          return;
+        }
+
+        document.title = `${data.title} - سمانه حسینی`;
+
+        const contentHtml = formatStoryContent(data.content);
+
+        const dateStr = data.created_at
+          ? new Date(data.created_at).toLocaleDateString('fa-IR')
+          : '';
+
+        const ageRatingHtml = data.age_rating
+          ? `
+            <span class="meta-divider">•</span>
+            <span class="badge">
+              رده سنی ${escapeHtml(data.age_rating)}
+            </span>
+          `
+          : '';
+
+        const imageHtml = data.image_url
+          ? `
+            <img
+              src="${escapeHtml(data.image_url)}"
+              alt="${escapeHtml(data.title)}"
+              class="story-image"
+              loading="lazy"
+            />
+          `
+          : '';
+
+        container.className = '';
+
+        container.innerHTML = `
+          <header class="story-header">
+            <h1>${escapeHtml(data.title)}</h1>
+
+            <div class="story-meta">
+              <span class="meta-item">
+                به‌قلم:
+                ${escapeHtml(data.author || 'سمانه حسینی')}
+              </span>
+
+              ${dateStr
+                ? `
+                  <span class="meta-divider">•</span>
+                  <span class="meta-item">${dateStr}</span>
+                `
+                : ''
+              }
+
+              ${ageRatingHtml}
+            </div>
+          </header>
+
+          ${imageHtml}
+
+          <div class="story-content">
+            ${contentHtml}
+          </div>
+
+          <div class="story-end">
+            ● ● ●
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('Story loading error:', error);
+
+        const container = document.getElementById('storyContent');
+
+        if (container) {
+          container.className = 'not-found';
+          container.textContent =
+            'خطا در بارگذاری داستان. لطفاً دوباره تلاش کنید.';
+        }
+      }
+    }
+
+    loadStory();
+  </script>
+</Layout>

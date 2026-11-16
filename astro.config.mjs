@@ -1,8 +1,17 @@
-import { defineConfig } from 'astro/config'
+
+import { defineConfig } from 'astro/config';
+import node from '@astrojs/node';
 
 export default defineConfig({
-  output: 'static',
-  build: {
-    assets: 'assets'
+  output: 'server',
+
+  adapter: node({
+    mode: 'standalone'
+  }),
+
+  vite: {
+    optimizeDeps: {
+      include: ['@supabase/supabase-js']
+    }
   }
-})
+});

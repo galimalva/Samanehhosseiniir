@@ -1,0 +1,839 @@
+
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="مدیریت دلنوشته‌ها" active="">
+
+<style>
+.admin-header {
+    background: linear-gradient(135deg, #443758, #5b4476, #764ba2);
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-header h1 { font-size: 22px; margin: 0; }
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-actions a,
+.admin-actions button {
+    color: white;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.15);
+    transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+    font-family: Tahoma;
+}
+
+.admin-actions a:hover,
+.admin-actions button:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.admin-actions .btn-red { background: #e74c3c; }
+.admin-actions .btn-red:hover { background: #c0392b; }
+.admin-actions .btn-green { background: #764ba2; }
+.admin-actions .btn-green:hover { background: #059669; }
+
+.writings-container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.loading {
+    text-align: center;
+    padding: 80px 20px;
+    color: #999;
+    font-size: 16px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+.stat-card .num {
+    font-size: 28px;
+    color: #764ba2;
+    font-weight: bold;
+}
+
+.stat-card .label {
+    font-size: 13px;
+    color: #999;
+    margin-top: 5px;
+}
+
+.writing-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.writing-item {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-right: 4px solid #764ba2;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.writing-info { flex: 1; min-width: 200px; }
+
+.writing-info h3 {
+    color: #443758;
+    margin: 0 0 5px;
+    font-size: 18px;
+}
+
+.writing-info .meta {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 8px;
+    line-height: 1.8;
+}
+
+.writing-info .excerpt {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.8;
+}
+
+.writing-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.writing-buttons button,
+.writing-buttons a {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: Tahoma;
+    font-size: 13px;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-edit { background: #fbbf24; color: #78350f; }
+.btn-edit:hover { background: #f59e0b; }
+
+.btn-delete { background: #ef4444; color: white; }
+.btn-delete:hover { background: #dc2626; }
+
+.btn-view {
+    background: #764ba2;
+    color: white;
+    display: inline-block;
+}
+
+.btn-view:hover { background: #059669; }
+
+.empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    background: white;
+    border-radius: 12px;
+}
+
+.empty .icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+/* فرم افزودن و ویرایش */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal h2 {
+    color: #443758;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 32px;
+    height: 32px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+}
+
+.modal-close:hover { background: #e5e7eb; }
+
+.form-group { margin-bottom: 18px; }
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #444;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: Tahoma;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #764ba2;
+    outline: none;
+}
+
+.form-group textarea {
+    min-height: 250px;
+    resize: vertical;
+    line-height: 1.8;
+    direction: rtl;
+}
+
+.form-group .hint {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+    line-height: 1.8;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.form-actions button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: Tahoma;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #443758, #764ba2);
+    color: white;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16,185,129,0.4);
+}
+
+.btn-cancel {
+    background: #f3f4f6;
+    color: #666;
+}
+
+.btn-cancel:hover { background: #e5e7eb; }
+
+.btn-save:disabled,
+.btn-cancel:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* پیام موفقیت و خطا */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #764ba2;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    z-index: 2000;
+    display: none;
+    font-size: 14px;
+    max-width: calc(100% - 40px);
+}
+
+.toast.show {
+    display: block;
+    animation: slideUp 0.3s;
+}
+
+.toast.error { background: #ef4444; }
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+    .admin-header { padding: 18px; }
+    .admin-header h1 { font-size: 19px; }
+    .modal { padding: 25px 18px; }
+    .writing-item { flex-direction: column; }
+    .toast { right: 20px; bottom: 20px; }
+}
+</style>
+
+<!-- سربرگ مدیریت -->
+<div id="adminPanel" style="display:none">
+<div class="admin-header">
+    <h1>✒️ مدیریت دلنوشته‌ها</h1>
+
+    <div class="admin-actions">
+        <a href="/admin/dashboard">← داشبورد</a>
+        <button class="btn-green" id="newBtn" type="button">➕ دلنوشته جدید</button>
+    </div>
+</div>
+
+<!-- محتوای اصلی -->
+<div class="writings-container">
+
+    <div class="stats" id="stats"></div>
+
+    <div id="writingsList">
+        <div class="loading">در حال بارگذاری...</div>
+    </div>
+
+</div>
+
+</div>
+
+<!-- فرم افزودن و ویرایش -->
+<div class="modal-overlay" id="modalOverlay">
+
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+        <button class="modal-close" id="closeModal" type="button">✕</button>
+
+        <h2 id="modalTitle">افزودن دلنوشته جدید</h2>
+
+        <form id="writingForm">
+
+            <input type="hidden" id="writingId">
+
+            <div class="form-group">
+                <label for="title">عنوان دلنوشته *</label>
+                <input
+                    type="text"
+                    id="title"
+                    required
+                    placeholder="مثلاً: نامه‌ای به شب"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="slug">شناسه (slug) *</label>
+                <input
+                    type="text"
+                    id="slug"
+                    required
+                    placeholder="مثلاً: name-be-shab"
+                    pattern="[a-z0-9-]+"
+                    dir="ltr"
+                >
+                <div class="hint">
+                    فقط حروف انگلیسی کوچک، عدد و خط تیره.
+                    در آدرس صفحه استفاده می‌شود: /writings/name-be-shab
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="ageRating">رده سنی</label>
+                <input
+                    type="text"
+                    id="ageRating"
+                    placeholder="مثلاً: ۱۶+ یا ۱۸+"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="excerpt">خلاصه کوتاه</label>
+                <textarea
+                    id="excerpt"
+                    placeholder="۲-۳ جمله از ابتدای دلنوشته..."
+                    style="min-height: 80px;"
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="imageUrl">آدرس تصویر (اختیاری)</label>
+                <input
+                    type="url"
+                    id="imageUrl"
+                    placeholder="https://..."
+                    dir="ltr"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="content">متن کامل دلنوشته *</label>
+                <textarea
+                    id="writingContent"
+                    required
+                    placeholder="متن دلنوشته را اینجا بنویسید..."
+                ></textarea>
+
+                <div class="hint">
+                    برای جدا کردن پاراگراف‌ها، خط خالی (Enter دو بار) بزنید.
+                    
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" id="cancelBtn">
+                    انصراف
+                </button>
+
+                <button type="submit" class="btn-save" id="saveBtn">
+                    ذخیره
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+import { supabase } from '../../lib/supabase.js';
+
+let session = null
+let toastTimer = null
+
+const getElement = (id) => document.getElementById(id)
+
+// بررسی ورود کاربر
+async function checkAuth() {
+    try {
+        const { data, error } = await supabase.auth.getSession()
+
+        if (error) throw error
+
+        if (!data.session) {
+            window.location.href = '/admin/login'
+            return false
+        }
+
+        session = data.session
+        return true
+
+    } catch (error) {
+        console.error('Auth error:', error)
+        showToast('خطا در بررسی ورود: ' + error.message, true)
+        return false
+    }
+}
+
+// ساخت slug از عنوان
+function makeSlug(title) {
+    return title.trim().toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+}
+
+// خواندن دلنوشته‌ها از Supabase
+async function loadWritings() {
+    getElement('writingsList').innerHTML =
+        '<div class="loading">در حال بارگذاری دلنوشته‌ها...</div>'
+
+    const { data, error } = await supabase
+        .from('writings')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error(error)
+        showToast('خطا در بارگذاری: ' + error.message, true)
+        getElement('writingsList').innerHTML =
+            '<div class="empty">بارگذاری دلنوشته‌ها ناموفق بود.</div>'
+        return
+    }
+
+    const writings = data || []
+
+    // نمایش آمار
+    getElement('stats').innerHTML = `
+        <div class="stat-card">
+            <div class="num">${writings.length}</div>
+            <div class="label">کل دلنوشته‌ها</div>
+        </div>
+    `
+
+    // حالت خالی
+    if (writings.length === 0) {
+        getElement('writingsList').innerHTML = `
+            <div class="empty">
+                <div class="icon">✒️</div>
+                <h3 style="color:#443758;margin-bottom:8px">
+                    هنوز دلنوشته‌ای وجود ندارد
+                </h3>
+                <p style="color:#999">
+                    روی «دلنوشته جدید» بزنید تا اولین دلنوشته را اضافه کنید
+                </p>
+            </div>
+        `
+        return
+    }
+
+    // نمایش فهرست دلنوشته‌ها
+    getElement('writingsList').innerHTML = `
+        <div class="writing-list">
+            ${writings.map(writing => {
+                const date = writing.created_at
+                    ? new Date(writing.created_at).toLocaleDateString('fa-IR')
+                    : 'نامشخص'
+
+                return `
+                    <div class="writing-item">
+
+                        <div class="writing-info">
+
+                            <h3>${escapeHtml(writing.title)}</h3>
+
+                            <div class="meta">
+                                شناسه: ${escapeHtml(writing.slug)}
+                                ${writing.age_rating
+                                    ? ' • رده سنی: ' + escapeHtml(writing.age_rating)
+                                    : ''
+                                }
+                                <br>
+                                تاریخ: ${date}
+                            </div>
+
+                            ${writing.excerpt
+                                ? `<div class="excerpt">
+                                    ${escapeHtml(writing.excerpt.substring(0, 150))}
+                                    ${writing.excerpt.length > 150 ? '...' : ''}
+                                   </div>`
+                                : ''
+                            }
+
+                        </div>
+
+                        <div class="writing-buttons">
+
+                            <a
+                                href="/writings/${encodeURIComponent(writing.slug)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn-view"
+                            >
+                                👁️ مشاهده
+                            </a>
+
+                            <button
+                                type="button"
+                                class="btn-edit"
+                                data-action="edit"
+                                data-id="${escapeHtml(writing.id)}"
+                            >
+                                ✏️ ویرایش
+                            </button>
+
+                            <button
+                                type="button"
+                                class="btn-delete"
+                                data-action="delete"
+                                data-id="${escapeHtml(writing.id)}"
+                                data-title="${escapeHtml(writing.title)}"
+                            >
+                                🗑️ حذف
+                            </button>
+
+                        </div>
+
+                    </div>
+                `
+            }).join('')}
+        </div>
+    `
+}
+
+// باز کردن فرم دلنوشته جدید
+function openNewModal() {
+    getElement('modalTitle').textContent = 'افزودن دلنوشته جدید'
+    getElement('writingForm').reset()
+    getElement('writingId').value = ''
+
+    getElement('modalOverlay').classList.add('show')
+    getElement('title').focus()
+}
+
+// ویرایش دلنوشته
+async function editWriting(id) {
+    const { data, error } = await supabase
+        .from('writings')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+    if (error) {
+        showToast('خطا در دریافت دلنوشته: ' + error.message, true)
+        return
+    }
+
+    getElement('modalTitle').textContent = 'ویرایش دلنوشته'
+
+    getElement('writingId').value = data.id
+    getElement('title').value = data.title || ''
+    getElement('slug').value = data.slug || ''
+    getElement('ageRating').value = data.age_rating || ''
+    getElement('excerpt').value = data.excerpt || ''
+    getElement('imageUrl').value = data.image_url || ''
+    getElement('writingContent').value = data.content || ''
+
+    getElement('modalOverlay').classList.add('show')
+}
+
+// حذف دلنوشته
+async function deleteWriting(id, title) {
+    const confirmed = confirm(
+        `آیا دلنوشته «${title}» حذف شود؟ این کار برگشت‌ناپذیر است.`
+    )
+
+    if (!confirmed) return
+
+    const { error } = await supabase
+        .from('writings')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        showToast('خطا در حذف: ' + error.message, true)
+        return
+    }
+
+    showToast('دلنوشته با موفقیت حذف شد')
+    await loadWritings()
+}
+
+// ذخیره دلنوشته جدید یا ویرایش دلنوشته
+getElement('writingForm').addEventListener('submit', async function(event) {
+    event.preventDefault()
+
+    const btn = getElement('saveBtn')
+
+    const id = getElement('writingId').value
+
+    const payload = {
+        title: getElement('title').value.trim(),
+        slug: getElement('slug').value.trim(),
+        age_rating: getElement('ageRating').value.trim(),
+        excerpt: getElement('excerpt').value.trim(),
+        image_url: getElement('imageUrl').value.trim() || null,
+        content: getElement('writingContent').value,
+        author: 'سمانه حسینی'
+    }
+
+    if (!payload.title || !payload.slug || !payload.content.trim()) {
+        showToast('عنوان، شناسه و متن دلنوشته الزامی هستند', true)
+        return
+    }
+
+    if (!/^[a-z0-9-]+$/.test(payload.slug)) {
+        showToast('شناسه باید فقط شامل حروف انگلیسی کوچک، عدد و خط تیره باشد', true)
+        return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'در حال ذخیره...'
+
+    try {
+        let result
+
+        if (id) {
+            result = await supabase
+                .from('writings')
+                .update(payload)
+                .eq('id', id)
+        } else {
+            result = await supabase
+                .from('writings')
+                .insert(payload)
+        }
+
+        if (result.error) throw result.error
+
+        showToast(
+            id
+                ? 'دلنوشته با موفقیت به‌روزرسانی شد'
+                : 'دلنوشته با موفقیت اضافه شد'
+        )
+
+        closeModal()
+        await loadWritings()
+
+    } catch (error) {
+        console.error('Save error:', error)
+        showToast('خطا در ذخیره: ' + error.message, true)
+
+    } finally {
+        btn.disabled = false
+        btn.textContent = 'ذخیره'
+    }
+})
+
+// بستن فرم
+function closeModal() {
+    getElement('modalOverlay').classList.remove('show')
+}
+
+getElement('closeModal').addEventListener('click', closeModal)
+getElement('cancelBtn').addEventListener('click', closeModal)
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeModal()
+})
+
+getElement('modalOverlay').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeModal()
+    }
+})
+
+// دکمه دلنوشته جدید
+getElement('newBtn').addEventListener('click', openNewModal)
+
+// ساخت خودکار slug از عنوان انگلیسی
+getElement('title').addEventListener('blur', function() {
+    const slugInput = getElement('slug')
+
+    if (!slugInput.value) {
+        const slug = makeSlug(this.value)
+
+        if (slug) {
+            slugInput.value = slug
+        }
+    }
+})
+
+// مدیریت دکمه‌های ویرایش و حذف
+getElement('writingsList').addEventListener('click', async function(event) {
+    const button = event.target.closest('button[data-action]')
+
+    if (!button) return
+
+    const id = button.dataset.id
+    const action = button.dataset.action
+
+    if (action === 'edit') {
+        await editWriting(id)
+    }
+
+    if (action === 'delete') {
+        await deleteWriting(id, button.dataset.title)
+    }
+})
+
+// نمایش پیام
+function showToast(message, isError = false) {
+    const toast = getElement('toast')
+
+    toast.textContent = message
+    toast.className = 'toast show' + (isError ? ' error' : '')
+
+    clearTimeout(toastTimer)
+
+    toastTimer = setTimeout(() => {
+        toast.className = 'toast'
+    }, 3000)
+}
+
+// جلوگیری از ورود کد HTML ناخواسته
+function escapeHtml(value) {
+    if (value == null) return ''
+
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+}
+
+// شروع برنامه
+async function init() {
+    const authenticated = await checkAuth()
+
+    if (authenticated) {
+        getElement('adminPanel').style.display = 'block'
+        await loadWritings()
+    }
+}
+
+init()
+
+</script>
+
+</Layout>
